@@ -98,10 +98,12 @@ class _GameScreenState extends State<GameScreen>
 
   // ランダムなシーケンスを生成し、発光順を生成する
   void _generateSequence() {
-    // 0からtotalGridCount - 1までのリストを生成
+    // シーケンスを生成
+    // trueのマスのインデックスを生成
     _sequence =
-        List<int>.generate(widget.gameStage.totalGridCount, (index) => index);
-
+        List.generate(widget.gameStage.gridItems.length, (index) => index)
+            .where((index) => widget.gameStage.gridItems[index].isViewGrid)
+            .toList();
     // リストをシャッフルしてランダムな順序にする
     _sequence.shuffle(_random);
   }
@@ -262,22 +264,35 @@ class _GameScreenState extends State<GameScreen>
                           child: GridView.builder(
                             gridDelegate:
                                 SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: widget.gameStage.rowGridCount,
+                              crossAxisCount:
+                                  widget.gameStage.columnCount, // 列数を設定
                               mainAxisSpacing: 8.0,
                               crossAxisSpacing: 8.0,
                             ),
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount:
-                                widget.gameStage.totalGridCount, // 2x2なので4つのマス
+                            itemCount: widget
+                                .gameStage.gridItems.length, // 2x2なので4つのマス
                             itemBuilder: (context, index) {
-                              return GridCellWidget(
-                                isActive: _currentStep == index,
-                                isUserTurn: _isUserTurn,
-                                onTap: () => _handleUserTap(index),
-                                isCorrectTapped: _userInput.contains(index),
-                                isMisTapped: _misTappedIndex == index,
-                              );
+                              final gridItem =
+                                  widget.gameStage.gridItems[index];
+                              if (gridItem.isViewGrid) {
+                                return GridCellWidget(
+                                  isActive: _currentStep == index,
+                                  isUserTurn: _isUserTurn,
+                                  onTap: () => _handleUserTap(index),
+                                  isCorrectTapped: _userInput.contains(index),
+                                  isMisTapped: _misTappedIndex == index,
+                                );
+                              } else {
+                                // 空のスペースを保持
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent, // 必要に応じて色を設定
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                );
+                              }
                             },
                           ),
                         ),
