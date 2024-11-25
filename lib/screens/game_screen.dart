@@ -4,15 +4,18 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:memorie/constants/colors.dart';
+import 'package:memorie/models/stage.dart';
 import 'package:memorie/widgets/grid_cell.dart';
 import 'package:memorie/widgets/setting_button.dart';
-import '../models/stage.dart';
-import '../constants/colors.dart';
+import 'package:memorie/widgets/title_painter.dart';
 
 class GameScreen extends StatefulWidget {
   final GameStage gameStage;
+  final String backGroundImagePath;
 
-  const GameScreen({super.key, required this.gameStage});
+  const GameScreen(
+      {super.key, required this.gameStage, required this.backGroundImagePath});
 
   @override
   _GameScreenState createState() => _GameScreenState();
@@ -54,9 +57,14 @@ class _GameScreenState extends State<GameScreen>
     curve: Curves.easeInOut,
   ));
 
+  // ブラシストロークとスプラッターのデータ
+  late final List<Path> brushPaths = [];
+  late final List<Offset> splatterPositions = [];
+
   @override
   void initState() {
     super.initState();
+    _generateBrushElements();
     _startGame();
     _bannerController.addListener(() {
       setState(() {});
@@ -74,7 +82,7 @@ class _GameScreenState extends State<GameScreen>
     setState(() {
       _bannerText = 'Memory...';
     });
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(milliseconds: 500));
 
     // バナーアニメーションの開始
     _bannerController.forward();
@@ -113,7 +121,8 @@ class _GameScreenState extends State<GameScreen>
     setState(() {
       _bannerText = 'START!';
     });
-    await Future.delayed(const Duration(seconds: 1));
+    // 0.5秒待機
+    await Future.delayed(const Duration(milliseconds: 500));
 
     _bannerController.forward();
 
@@ -127,6 +136,39 @@ class _GameScreenState extends State<GameScreen>
     setState(() {
       _isUserTurn = true;
     });
+  }
+
+  // ブラシストロークとスプラッターを生成
+  void _generateBrushElements() {
+    const strokeCount = 200; // ストローク数を調整
+    const size = Size(500, 50); // ペイントエリアのサイズに合わせて調整
+
+    // ブラシストロークの生成
+    for (int i = 0; i < strokeCount; i++) {
+      Path path = Path();
+      double startX = _random.nextDouble() * size.width;
+      double startY = _random.nextDouble() * size.height;
+
+      path.moveTo(startX, startY);
+
+      int controlPoints = _random.nextInt(3) + 1;
+      for (int j = 0; j < controlPoints; j++) {
+        double controlX = _random.nextDouble() * size.width;
+        double controlY = _random.nextDouble() * size.height;
+        double endX = _random.nextDouble() * size.width;
+        double endY = _random.nextDouble() * size.height;
+        path.quadraticBezierTo(controlX, controlY, endX, endY);
+      }
+
+      brushPaths.add(path);
+    }
+
+    // スプラッターの位置を生成
+    for (int i = 0; i < strokeCount * 2; i++) {
+      double x = _random.nextDouble() * size.width;
+      double y = _random.nextDouble() * size.height;
+      splatterPositions.add(Offset(x, y));
+    }
   }
 
   // シーケンスを順番に表示
@@ -149,7 +191,6 @@ class _GameScreenState extends State<GameScreen>
         _currentStep = -1;
       });
       // 非アクティブ時間
-      // TODO.ここでSTART!表示を追加する
       await Future.delayed(const Duration(milliseconds: 1));
     }
     _showStartBanner();
@@ -227,7 +268,7 @@ class _GameScreenState extends State<GameScreen>
             Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(widget.gameStage.backgroundGameScreenImage),
+                  image: AssetImage(widget.backGroundImagePath),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -244,56 +285,80 @@ class _GameScreenState extends State<GameScreen>
                           iconColor: AppColors.black,
                         ),
                       ),
+                      const SizedBox(height: 40.0),
                       // ステージタイトル
-                      Text(
-                        widget.gameStage.name,
-                        style: GoogleFonts.rockSalt(
-                          textStyle: const TextStyle(
-                            fontSize: 36.0,
-                            color: AppColors.black,
-                            fontWeight: FontWeight.bold,
+                      Stack(
+                        children: [
+                          CustomPaint(
+                            painter: BrushBackgroundPainter(
+                              brushPaths: brushPaths,
+                              splatterPositions: splatterPositions,
+                              color: AppColors.white,
+                              splatterRadius: 10.0, // スプラッターの半径を調整
+                            ),
                           ),
-                        ),
-                        textAlign: TextAlign.center,
+                          Center(
+                            child: Text(
+                              widget.gameStage.name,
+                              style: GoogleFonts.rockSalt(
+                                textStyle: const TextStyle(
+                                  fontSize: 36.0,
+                                  color: AppColors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 120.0),
                       // ゲームの中心となるマスウィジェットのグリッド
                       Center(
                         child: SizedBox(
-                          width: 200, // グリッドの幅を指定
-                          child: GridView.builder(
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount:
-                                  widget.gameStage.columnCount, // 列数を設定
-                              mainAxisSpacing: 8.0,
-                              crossAxisSpacing: 8.0,
+                          width: 280, // グリッドの幅を指定
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.white.withOpacity(0.8),
+                              borderRadius:
+                                  BorderRadius.circular(16.0), // 角丸を指定
                             ),
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: widget
-                                .gameStage.gridItems.length, // 2x2なので4つのマス
-                            itemBuilder: (context, index) {
-                              final gridItem =
-                                  widget.gameStage.gridItems[index];
-                              if (gridItem.isViewGrid) {
-                                return GridCellWidget(
-                                  isActive: _currentStep == index,
-                                  isUserTurn: _isUserTurn,
-                                  onTap: () => _handleUserTap(index),
-                                  isCorrectTapped: _userInput.contains(index),
-                                  isMisTapped: _misTappedIndex == index,
-                                );
-                              } else {
-                                // 空のスペースを保持
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.transparent, // 必要に応じて色を設定
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                );
-                              }
-                            },
+                            padding:
+                                const EdgeInsets.all(20.0), // 必要に応じてパディングを追加
+                            child: GridView.builder(
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount:
+                                    widget.gameStage.columnCount, // 列数を設定
+                                mainAxisSpacing: 8.0,
+                                crossAxisSpacing: 8.0,
+                              ),
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: widget
+                                  .gameStage.gridItems.length, // 2x2なので4つのマス
+                              itemBuilder: (context, index) {
+                                final gridItem =
+                                    widget.gameStage.gridItems[index];
+                                if (gridItem.isViewGrid) {
+                                  return GridCellWidget(
+                                    isActive: _currentStep == index,
+                                    isUserTurn: _isUserTurn,
+                                    onTap: () => _handleUserTap(index),
+                                    isCorrectTapped: _userInput.contains(index),
+                                    isMisTapped: _misTappedIndex == index,
+                                  );
+                                } else {
+                                  // 空のスペースを保持
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.transparent, // 必要に応じて色を設定
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
                           ),
                         ),
                       ),

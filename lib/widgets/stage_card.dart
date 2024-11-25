@@ -19,7 +19,10 @@ class StageCard extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => GameScreen(gameStage: stage as GameStage),
+              builder: (context) => GameScreen(
+                gameStage: stage as GameStage,
+                backGroundImagePath: stage!.stageCardImage,
+              ),
             ),
           );
         } else if (stage is MainStage) {
@@ -75,11 +78,11 @@ class StageCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const Expanded(
+              Expanded(
                 flex: 1,
                 // 画像
                 child: Image(
-                  image: AssetImage('lib/assets/backgrounds/lifew.png'),
+                  image: AssetImage(stage!.stageCardImage),
                   fit: BoxFit.fitWidth,
                 ),
               ),
