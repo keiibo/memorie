@@ -1,5 +1,3 @@
-// lib/widgets/grid_cell_widget.dart
-
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 
@@ -43,7 +41,7 @@ class _GridCellWidgetState extends State<GridCellWidget> {
                   : (widget.isActive
                       ? AppColors.cream.withOpacity(0.7)
                       : AppColors.grey)),
-          borderRadius: BorderRadius.circular(20.0),
+          borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.2),

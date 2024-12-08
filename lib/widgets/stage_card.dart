@@ -2,41 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:memorie/constants/colors.dart';
 import 'package:memorie/models/stage.dart';
-import 'package:memorie/screens/game_screen.dart';
-import 'package:memorie/screens/sub_stage_selection_screen.dart';
 
 class StageCard extends StatelessWidget {
-  final Stage? stage;
+  final Stage stage;
 
   const StageCard({super.key, required this.stage});
 
+  bool get _isLocked {
+    if (stage is GameStage) {
+      return !(stage as GameStage).isUnlocked;
+    } else if (stage is MainStage) {
+      return !(stage as MainStage).isUnlocked;
+    }
+    return false; // それ以外のStageはロック概念なし
+  }
+
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        if (stage is GameStage) {
-          // GameStageの場合はGameScreenへ遷移
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => GameScreen(
-                gameStage: stage as GameStage,
-                backGroundImagePath: stage!.stageCardImage,
-              ),
-            ),
-          );
-        } else if (stage is MainStage) {
-          // MainStageの場合はSubStageSelectionScreenへ遷移
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  SubStageSelectionScreen(stage: stage as MainStage),
-            ),
-          );
-        }
-      },
-      child: Container(
+    return Stack(
+      children: [
+        Container(
           decoration: const BoxDecoration(
             color: AppColors.lightGrey,
             border: Border(
@@ -48,7 +33,7 @@ class StageCard extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                flex: 1,
+                flex: 3,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -56,7 +41,7 @@ class StageCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        stage!.name,
+                        stage.name,
                         style: GoogleFonts.rockSalt(
                           textStyle: const TextStyle(
                             fontSize: 16,
@@ -66,7 +51,7 @@ class StageCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        stage!.subName,
+                        stage.subName,
                         style: GoogleFonts.robotoSlab(
                           textStyle: const TextStyle(
                             fontSize: 12,
@@ -80,14 +65,30 @@ class StageCard extends StatelessWidget {
               ),
               Expanded(
                 flex: 1,
-                // 画像
                 child: Image(
-                  image: AssetImage(stage!.stageCardImage),
+                  image: stage is MainStage
+                      ? AssetImage(stage.stageThumbnailImage)
+                      : AssetImage((stage as GameStage).stageThumbnailImage),
                   fit: BoxFit.fitWidth,
                 ),
               ),
             ],
-          )),
+          ),
+        ),
+        if (_isLocked)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.5),
+              child: const Center(
+                child: Icon(
+                  Icons.lock,
+                  color: Colors.white,
+                  size: 48,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

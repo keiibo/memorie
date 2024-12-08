@@ -30,7 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  audioplayers: ^0.20.1 # 音声再生用
+  audioplayers: ^6.1.0
   provider: ^6.0.0 # 状態管理用
   animations: ^2.0.0 # アニメーション用
   google_fonts: ^4.0.0 # フォントカスタマイズ用
@@ -38,6 +38,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.0.9
+  shared_preferences: ^2.3.3
 
 dev_dependencies:
   flutter_test:
@@ -61,7 +62,9 @@ flutter:
   uses-material-design: true
   assets:
     - lib/assets/backgrounds/
+    - lib/assets/thumbnails/
     - lib/assets/icons/
+    - assets/audio/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

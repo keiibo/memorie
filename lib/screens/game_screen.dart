@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:memorie/constants/colors.dart';
 import 'package:memorie/models/stage.dart';
+import 'package:memorie/services/stage_persistence_service.dart';
 import 'package:memorie/widgets/grid_cell.dart';
 import 'package:memorie/widgets/setting_button.dart';
 import 'package:memorie/widgets/title_painter.dart';
@@ -29,10 +30,20 @@ class _GameScreenState extends State<GameScreen>
   List<int> _userInput = []; // ユーザーの入力シーケンス
   int _misTappedIndex = -1; // 誤タップしたマスのインデックス
 
+  // シーケンス中かどうか
+  bool _isDisplayingSequence = false;
+
   // バナーのテキストを制御するためのフィールド
   String _bannerText = '';
 
+  // クリア判定
+  bool _isResultOverlayVisible = false;
+  bool _isResultSuccess = false;
+
   final Random _random = Random();
+
+  // ポーズ状態を管理するためのフィールド
+  bool _isPaused = false;
 
   // アニメーション関連のフィールド
   late final AnimationController _bannerController = AnimationController(
@@ -99,6 +110,9 @@ class _GameScreenState extends State<GameScreen>
 
   // ゲーム開始時の初期化
   void _startGame() {
+    setState(() {
+      _isDisplayingSequence = true;
+    });
     _generateSequence();
 
     _showMemoryBanner();
@@ -119,7 +133,7 @@ class _GameScreenState extends State<GameScreen>
   // START!バナーを表示
   void _showStartBanner() async {
     setState(() {
-      _bannerText = 'START!';
+      _bannerText = 'Do it!';
     });
     // 0.5秒待機
     await Future.delayed(const Duration(milliseconds: 500));
@@ -135,6 +149,9 @@ class _GameScreenState extends State<GameScreen>
 
     setState(() {
       _isUserTurn = true;
+    });
+    setState(() {
+      _isDisplayingSequence = false;
     });
   }
 
@@ -198,7 +215,6 @@ class _GameScreenState extends State<GameScreen>
 
   // ユーザーがマスをタップした時の処理
   void _handleUserTap(int index) {
-    print("User tapped: $index"); // デバッグ用
     if (!_isUserTurn) return;
 
     setState(() {
@@ -220,30 +236,16 @@ class _GameScreenState extends State<GameScreen>
     }
   }
 
-  // 結果を表示するダイアログ
+  void _showResultOverlay(bool isSuccess) {
+    unlockNextStage(widget.gameStage.id);
+    setState(() {
+      _isResultOverlayVisible = true;
+      _isResultSuccess = isSuccess;
+    });
+  }
+
   void _showResultDialog(bool isSuccess) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(isSuccess ? 'クリア！' : '失敗'),
-        content:
-            Text(isSuccess ? 'おめでとうございます！ステージをクリアしました。' : '残念！もう一度挑戦してください。'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              if (isSuccess) {
-                Navigator.pop(context, true); // 成功時に前の画面に戻る際にtrueを返す
-              } else {
-                _restartGame();
-              }
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
+    _showResultOverlay(isSuccess);
   }
 
   // ゲームを再スタート
@@ -256,6 +258,45 @@ class _GameScreenState extends State<GameScreen>
       _misTappedIndex = -1;
     });
     _startGame();
+  }
+
+  // 歯車ボタンが押されたときに呼ばれるメソッド
+  void _onSettingsButtonPressed() {
+    if (_isDisplayingSequence) {
+      return;
+    }
+
+    setState(() {
+      _isPaused = true;
+    });
+  }
+
+  // ポーズメニューの"再開"ボタンが押されたとき
+  void _resumeGame() {
+    setState(() {
+      _isPaused = false;
+    });
+  }
+
+  // ポーズメニューの"やめる"ボタンが押されたとき
+  void _quitGame() {
+    Navigator.pop(context);
+  }
+
+  void _handleResultOk() {
+    setState(() {
+      _isResultOverlayVisible = false;
+    });
+
+    // 成功時に前の画面に戻る際にtrueを返す
+    Navigator.pop(context, true);
+  }
+
+  void _retryGame() {
+    setState(() {
+      _isResultOverlayVisible = false;
+    });
+    _restartGame();
   }
 
   @override
@@ -277,12 +318,13 @@ class _GameScreenState extends State<GameScreen>
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     children: [
-                      const Align(
+                      Align(
                         alignment: Alignment.centerRight,
                         child: SettingButtonWidget(
                           iconSize: 24,
                           fontSize: 24,
                           iconColor: AppColors.black,
+                          onPressed: _onSettingsButtonPressed, // コールバックを渡す
                         ),
                       ),
                       const SizedBox(height: 40.0),
@@ -312,52 +354,56 @@ class _GameScreenState extends State<GameScreen>
                           ),
                         ],
                       ),
-                      const SizedBox(height: 120.0),
+                      const SizedBox(height: 20.0),
                       // ゲームの中心となるマスウィジェットのグリッド
-                      Center(
-                        child: SizedBox(
-                          width: 280, // グリッドの幅を指定
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.white.withOpacity(0.8),
-                              borderRadius:
-                                  BorderRadius.circular(16.0), // 角丸を指定
-                            ),
-                            padding:
-                                const EdgeInsets.all(20.0), // 必要に応じてパディングを追加
-                            child: GridView.builder(
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount:
-                                    widget.gameStage.columnCount, // 列数を設定
-                                mainAxisSpacing: 8.0,
-                                crossAxisSpacing: 8.0,
+                      Expanded(
+                        child: Center(
+                          child: SizedBox(
+                            width: 280, // グリッドの幅を指定
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.white.withOpacity(0.8),
+                                borderRadius:
+                                    BorderRadius.circular(16.0), // 角丸を指定
                               ),
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: widget
-                                  .gameStage.gridItems.length, // 2x2なので4つのマス
-                              itemBuilder: (context, index) {
-                                final gridItem =
-                                    widget.gameStage.gridItems[index];
-                                if (gridItem.isViewGrid) {
-                                  return GridCellWidget(
-                                    isActive: _currentStep == index,
-                                    isUserTurn: _isUserTurn,
-                                    onTap: () => _handleUserTap(index),
-                                    isCorrectTapped: _userInput.contains(index),
-                                    isMisTapped: _misTappedIndex == index,
-                                  );
-                                } else {
-                                  // 空のスペースを保持
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.transparent, // 必要に応じて色を設定
-                                      borderRadius: BorderRadius.circular(8.0),
-                                    ),
-                                  );
-                                }
-                              },
+                              padding:
+                                  const EdgeInsets.all(20.0), // 必要に応じてパディングを追加
+                              child: GridView.builder(
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount:
+                                      widget.gameStage.columnCount, // 列数を設定
+                                  mainAxisSpacing: 8.0,
+                                  crossAxisSpacing: 8.0,
+                                ),
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: widget
+                                    .gameStage.gridItems.length, // 2x2なので4つのマス
+                                itemBuilder: (context, index) {
+                                  final gridItem =
+                                      widget.gameStage.gridItems[index];
+                                  if (gridItem.isViewGrid) {
+                                    return GridCellWidget(
+                                      isActive: _currentStep == index,
+                                      isUserTurn: _isUserTurn,
+                                      onTap: () => _handleUserTap(index),
+                                      isCorrectTapped:
+                                          _userInput.contains(index),
+                                      isMisTapped: _misTappedIndex == index,
+                                    );
+                                  } else {
+                                    // 空のスペースを保持
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.transparent, // 必要に応じて色を設定
+                                        borderRadius:
+                                            BorderRadius.circular(8.0),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
                             ),
                           ),
                         ),
@@ -395,6 +441,131 @@ class _GameScreenState extends State<GameScreen>
                           ),
                         ),
                       ),
+                    ),
+                  ),
+                ),
+              ),
+            if (_isPaused)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withOpacity(0.8),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'PAUSE',
+                          style: GoogleFonts.rockSalt(
+                            textStyle: const TextStyle(
+                              fontSize: 36.0,
+                              color: AppColors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 120),
+                        TextButton(
+                          onPressed: _resumeGame,
+                          child: Text(
+                            'Resume',
+                            style: GoogleFonts.rockSalt(
+                              textStyle: const TextStyle(
+                                fontSize: 24.0,
+                                color: AppColors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        TextButton(
+                          onPressed: _quitGame,
+                          child: Text(
+                            'Home',
+                            style: GoogleFonts.rockSalt(
+                              textStyle: const TextStyle(
+                                fontSize: 24.0,
+                                color: AppColors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            if (_isResultOverlayVisible)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withOpacity(0.8),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _isResultSuccess ? 'Clear!' : 'Oops!',
+                          style: GoogleFonts.rockSalt(
+                            textStyle: const TextStyle(
+                              fontSize: 48.0,
+                              color: AppColors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 120),
+                        // 失敗時のみリトライボタンを表示
+                        if (!_isResultSuccess)
+                          Column(
+                            children: [
+                              TextButton(
+                                onPressed: _retryGame,
+                                child: Text(
+                                  'Retry?',
+                                  style: GoogleFonts.rockSalt(
+                                    textStyle: const TextStyle(
+                                      fontSize: 24.0,
+                                      color: AppColors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context, true);
+                                },
+                                child: Text(
+                                  'Stage Selection',
+                                  style: GoogleFonts.rockSalt(
+                                    textStyle: const TextStyle(
+                                      fontSize: 24.0,
+                                      color: AppColors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        // クリア時は次のステージへ進むボタンを表示
+                        if (_isResultSuccess)
+                          TextButton(
+                            onPressed: _handleResultOk,
+                            child: Text(
+                              'Go To Next Stage',
+                              style: GoogleFonts.rockSalt(
+                                textStyle: const TextStyle(
+                                  fontSize: 24.0,
+                                  color: AppColors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),

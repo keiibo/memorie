@@ -7,20 +7,21 @@ class SettingButtonWidget extends StatelessWidget {
   final double iconSize;
   final double fontSize;
   final Color iconColor;
+  final VoidCallback? onPressed;
 
   const SettingButtonWidget({
     super.key,
     required this.iconSize,
     required this.fontSize,
     required this.iconColor,
+    this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        print("歯車がタップされました");
-        // TODO.設定オーバーレイを開く
+        onPressed?.call();
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
