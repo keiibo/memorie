@@ -1,13 +1,20 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:memorie/screens/home_screen.dart';
 import 'package:memorie/services/stage_persistence_service.dart';
 
 void main() async {
+  if (kDebugMode) {
+    print('デバッグモード');
+  }
   // SharedPreferencesを使う前にFlutterのバインディングを初期化
   WidgetsFlutterBinding.ensureInitialized();
   // ステージのアンロック状態を読み込み
   await loadUnlockedStates();
+
+  MobileAds.instance.initialize();
 
   // デバッグ用
   // unlockStageOneToFourStages();

@@ -5,9 +5,11 @@ import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:memorie/constants/colors.dart';
 import 'package:memorie/models/stage.dart';
 import 'package:memorie/services/stage_persistence_service.dart';
+import 'package:memorie/utils/ad_id.dart';
 import 'package:memorie/widgets/grid_cell.dart';
 import 'package:memorie/widgets/setting_button.dart';
 import 'package:memorie/widgets/title_painter.dart';
@@ -73,9 +75,63 @@ class _GameScreenState extends State<GameScreen>
   late final List<Path> brushPaths = [];
   late final List<Offset> splatterPositions = [];
 
+  // バナー広告の表示
+  late BannerAd _bannerAd;
+  bool _isBannerAdReady = false;
+  final id = getAdBannerUnitId();
+
+  // インタースティシャル広告の表示
+  InterstitialAd? _interstitialAd;
+
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: getAdInterstitialUnitId(), // インタースティシャル広告のIDを取得
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          print('InterstitialAd loaded.');
+          _interstitialAd = ad;
+          // フルスクリーンコンテンツコールバックを設定
+          _interstitialAd?.fullScreenContentCallback =
+              FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              ad.dispose();
+              _loadInterstitialAd(); // 次回のために再度ロード
+            },
+            onAdFailedToShowFullScreenContent: (ad, error) {
+              ad.dispose();
+              _loadInterstitialAd(); // 再度ロード
+            },
+          );
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          print("インタースティシャル広告のロード失敗");
+          print('InterstitialAd failed to load: $error');
+          // 必要に応じて数秒後や次のステップで再ロードを試すことも可能
+        },
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadInterstitialAd();
+    _bannerAd = BannerAd(
+      adUnitId: id,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          setState(() {
+            _isBannerAdReady = true;
+          });
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          ad.dispose();
+        },
+      ),
+    )..load();
     _generateBrushElements();
     _startGame();
     _bannerController.addListener(() {
@@ -86,6 +142,7 @@ class _GameScreenState extends State<GameScreen>
   @override
   void dispose() {
     _bannerController.dispose();
+    _interstitialAd?.dispose();
     super.dispose();
   }
 
@@ -265,6 +322,15 @@ class _GameScreenState extends State<GameScreen>
       _isResultOverlayVisible = true;
       _isResultSuccess = isSuccess;
     });
+
+    int random = Random().nextInt(100);
+    // 35%の確率でインタースティシャル広告を表示
+    if (random < 35) {
+      if (_interstitialAd != null) {
+        _interstitialAd?.show();
+        // show()後はonAdDismissedFullScreenContentでdisposeされるため_ad = null扱い不要
+      }
+    }
   }
 
   void _showResultDialog(bool isSuccess) {
@@ -312,6 +378,7 @@ class _GameScreenState extends State<GameScreen>
     });
     widget.gameStage.isCleared = true;
     saveStageStates();
+
     // 成功時に前の画面に戻る際にtrueを返す
     Navigator.pop(context, true);
   }
@@ -432,6 +499,12 @@ class _GameScreenState extends State<GameScreen>
                           ),
                         ),
                       ),
+                      if (_isBannerAdReady)
+                        SizedBox(
+                          width: _bannerAd.size.width.toDouble(),
+                          height: _bannerAd.size.height.toDouble(),
+                          child: AdWidget(ad: _bannerAd),
+                        ),
                     ],
                   ),
                 ),
@@ -469,6 +542,7 @@ class _GameScreenState extends State<GameScreen>
                   ),
                 ),
               ),
+
             if (_isPaused)
               Positioned.fill(
                 child: Container(

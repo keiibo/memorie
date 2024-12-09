@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-9468198082482711~7421892736</string>
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
 </dict>
 </plist>

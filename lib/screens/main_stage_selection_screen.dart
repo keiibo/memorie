@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:memorie/constants/colors.dart';
 import 'package:memorie/constants/stage_list.dart';
 import 'package:memorie/screens/sub_stage_selection_screen.dart';
+import 'package:memorie/utils/ad_id.dart';
 import 'package:memorie/widgets/back_button.dart';
 import 'package:memorie/widgets/stage_card.dart';
 
@@ -13,6 +15,37 @@ class StageSelectionScreen extends StatefulWidget {
 }
 
 class _StageSelectionScreenState extends State<StageSelectionScreen> {
+  late BannerAd _bannerAd;
+  bool _isBannerAdReady = false;
+
+  final id = getAdBannerUnitId();
+
+  @override
+  void initState() {
+    super.initState();
+    _bannerAd = BannerAd(
+      adUnitId: id,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          setState(() {
+            _isBannerAdReady = true;
+          });
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          ad.dispose();
+        },
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,6 +107,12 @@ class _StageSelectionScreenState extends State<StageSelectionScreen> {
                   ),
                 ),
               ),
+              if (_isBannerAdReady)
+                SizedBox(
+                  width: _bannerAd.size.width.toDouble(),
+                  height: _bannerAd.size.height.toDouble(),
+                  child: AdWidget(ad: _bannerAd),
+                ),
             ],
           ),
         ),

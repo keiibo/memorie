@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:memorie/constants/colors.dart';
 import 'package:memorie/models/stage.dart';
 import 'package:memorie/screens/game_screen.dart';
+import 'package:memorie/utils/ad_id.dart';
 import 'package:memorie/widgets/back_button.dart';
 import 'package:memorie/widgets/stage_card.dart';
 
@@ -16,6 +18,31 @@ class SubStageSelectionScreen extends StatefulWidget {
 }
 
 class _SubStageSelectionScreenState extends State<SubStageSelectionScreen> {
+  late BannerAd _bannerAd;
+  bool _isBannerAdReady = false;
+
+  final id = getAdBannerUnitId();
+
+  @override
+  void initState() {
+    super.initState();
+    _bannerAd = BannerAd(
+      adUnitId: id,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          setState(() {
+            _isBannerAdReady = true;
+          });
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          ad.dispose();
+        },
+      ),
+    )..load();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -93,6 +120,12 @@ class _SubStageSelectionScreenState extends State<SubStageSelectionScreen> {
                   ),
                 ),
               ),
+              if (_isBannerAdReady)
+                SizedBox(
+                  width: _bannerAd.size.width.toDouble(),
+                  height: _bannerAd.size.height.toDouble(),
+                  child: AdWidget(ad: _bannerAd),
+                ),
             ],
           ),
         ),
