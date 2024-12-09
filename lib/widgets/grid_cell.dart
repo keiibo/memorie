@@ -22,7 +22,21 @@ class GridCellWidget extends StatefulWidget {
 }
 
 class _GridCellWidgetState extends State<GridCellWidget> {
-  void handleTap() {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void handleTap() async {
+    // 一度正解しているセルを再度タップした場合は何もしない
+    if (widget.isCorrectTapped) {
+      return;
+    }
     if (widget.isUserTurn) {
       widget.onTap();
     }

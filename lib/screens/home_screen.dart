@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:memorie/constants/colors.dart';
 import 'package:memorie/screens/main_stage_selection_screen.dart';
-import 'package:memorie/services/audio_manager.dart'; // 追加
+import 'package:memorie/services/audio_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _initBGM() async {
-    await AudioManager().playBGM('audio/yubiwa.mp3', volume: 0.5);
+    await AudioManager().playBGM('audio/bgm/yubiwa.mp3', volume: 0.5);
   }
 
   @override
@@ -111,6 +111,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           ),
                         ),
                       ),
+                      // TODO.リリース1.2で実装
+                      // const SizedBox(height: 16),
+                      // TextButton(
+                      //   onPressed: () {
+                      //     // 設定画面に遷移
+                      //   },
+                      //   child: Text(
+                      //     'Setting',
+                      //     style: GoogleFonts.rockSalt(
+                      //       textStyle: const TextStyle(
+                      //         fontSize: 24,
+                      //         color: AppColors.black,
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),

@@ -46,15 +46,18 @@ class GameStage extends Stage {
   // ステージのロック状態
   bool isUnlocked;
 
+  bool isCleared;
+
   GameStage({
     required super.id,
     required super.name,
     required super.subName,
     required super.stageCardImage,
+    required super.stageThumbnailImage,
     required this.columnCount,
     required this.gridItems,
     this.isUnlocked = false, // デフォルトはfalse
-    required super.stageThumbnailImage,
+    this.isCleared = false, // デフォルトはfalse
   });
 }
 

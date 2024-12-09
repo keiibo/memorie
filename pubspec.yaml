@@ -64,7 +64,8 @@ flutter:
     - lib/assets/backgrounds/
     - lib/assets/thumbnails/
     - lib/assets/icons/
-    - assets/audio/
+    - assets/audio/bgm/
+    - assets/audio/se/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

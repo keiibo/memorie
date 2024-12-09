@@ -2,6 +2,7 @@
 
 import 'dart:math';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:memorie/constants/colors.dart';
@@ -202,6 +203,8 @@ class _GameScreenState extends State<GameScreen>
       setState(() {
         _currentStep = index;
       });
+      _playNormalSound();
+
       // 発光時間
       await Future.delayed(const Duration(seconds: 1));
       setState(() {
@@ -222,6 +225,7 @@ class _GameScreenState extends State<GameScreen>
     });
 
     if (_userInput[_userInput.length - 1] != _sequence[_userInput.length - 1]) {
+      _playMisSound();
       // 不正解
       setState(() {
         _misTappedIndex = index; // ミスタップしたインデックスを記録
@@ -231,13 +235,32 @@ class _GameScreenState extends State<GameScreen>
     }
 
     if (_userInput.length == _sequence.length) {
-      // 正解
+      // クリア
+      _playCorrectSound();
+      unlockNextStage(widget.gameStage.id);
       _showResultDialog(true);
+      return;
     }
+
+    _playNormalSound();
+  }
+
+  Future<void> _playCorrectSound() async {
+    final player = AudioPlayer();
+    await player.play(AssetSource('audio/se/clear_tap.mp3'), volume: 1.2);
+  }
+
+  Future<void> _playMisSound() async {
+    final player = AudioPlayer();
+    await player.play(AssetSource('audio/se/mis_tap.mp3'));
+  }
+
+  Future<void> _playNormalSound() async {
+    final player = AudioPlayer();
+    await player.play(AssetSource('audio/se/normal_tap.mp3'));
   }
 
   void _showResultOverlay(bool isSuccess) {
-    unlockNextStage(widget.gameStage.id);
     setState(() {
       _isResultOverlayVisible = true;
       _isResultSuccess = isSuccess;
@@ -287,7 +310,8 @@ class _GameScreenState extends State<GameScreen>
     setState(() {
       _isResultOverlayVisible = false;
     });
-
+    widget.gameStage.isCleared = true;
+    saveStageStates();
     // 成功時に前の画面に戻る際にtrueを返す
     Navigator.pop(context, true);
   }

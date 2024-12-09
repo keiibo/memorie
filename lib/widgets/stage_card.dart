@@ -17,6 +17,13 @@ class StageCard extends StatelessWidget {
     return false; // それ以外のStageはロック概念なし
   }
 
+  bool get _isCleared {
+    if (stage is GameStage) {
+      return (stage as GameStage).isCleared;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -40,14 +47,39 @@ class StageCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        stage.name,
-                        style: GoogleFonts.rockSalt(
-                          textStyle: const TextStyle(
-                            fontSize: 16,
-                            color: AppColors.black,
+                      Row(
+                        children: [
+                          Text(
+                            stage.name,
+                            style: GoogleFonts.rockSalt(
+                              textStyle: const TextStyle(
+                                fontSize: 16,
+                                color: AppColors.black,
+                              ),
+                            ),
                           ),
-                        ),
+                          if (_isCleared)
+                            Row(
+                              children: [
+                                const SizedBox(width: 12),
+                                const Icon(
+                                  Icons.check,
+                                  color: AppColors.brown,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  'Cleared!',
+                                  style: GoogleFonts.robotoSlab(
+                                    textStyle: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.black,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text(

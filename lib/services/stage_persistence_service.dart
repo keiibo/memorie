@@ -9,12 +9,14 @@ final List<MainStage> stageList = stages;
 /// unlocked_stages情報を読み込みGameStageに反映する。
 Future<void> loadUnlockedStates() async {
   final prefs = await SharedPreferences.getInstance();
-  final unlockedIds = prefs.getStringList('unlocked_stages') ?? ['1-1'];
   // デフォルトで '1-1' はアンロック済みにしておくなど
+  final unlockedIds = prefs.getStringList('unlocked_stages') ?? ['1-1'];
+  final clearedIds = prefs.getStringList('cleared_stages') ?? [];
 
   for (final mainStage in stages) {
     for (final gameStage in mainStage.gameStages) {
       gameStage.isUnlocked = unlockedIds.contains(gameStage.id);
+      gameStage.isCleared = clearedIds.contains(gameStage.id);
     }
   }
 }
@@ -62,6 +64,21 @@ void unlockNextStage(String currentStageId) {
       }
     }
   }
+}
+
+// saveStageStates()
+// ステージのクリア状態を保存する
+Future<void> saveStageStates() async {
+  final prefs = await SharedPreferences.getInstance();
+  final clearedIds = <String>[];
+
+  for (final mainStage in stages) {
+    for (final gs in mainStage.gameStages) {
+      if (gs.isCleared) clearedIds.add(gs.id);
+    }
+  }
+
+  await prefs.setStringList('cleared_stages', clearedIds);
 }
 
 // ==========================================
