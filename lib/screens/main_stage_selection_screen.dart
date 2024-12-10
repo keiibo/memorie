@@ -82,9 +82,8 @@ class _StageSelectionScreenState extends State<StageSelectionScreen> {
                     ),
                     itemBuilder: (context, index) {
                       final stage = stages[index]; // ここはMainStageが格納されている想定
-                      return GestureDetector(
+                      return InkWell(
                         onTap: () async {
-                          // MainStageをタップしたらSubStageSelectionScreenへ
                           final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -93,12 +92,8 @@ class _StageSelectionScreenState extends State<StageSelectionScreen> {
                             ),
                           );
 
-                          // resultがtrueならアンロック状態が更新された可能性あり
                           if (result == true) {
-                            setState(() {
-                              // setStateを呼ぶことでUIが再ビルドされ、
-                              // アンロック状態が反映される
-                            });
+                            setState(() {});
                           }
                         },
                         child: StageCard(stage: stage),

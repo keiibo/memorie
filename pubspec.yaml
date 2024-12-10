@@ -40,6 +40,7 @@ dependencies:
   flutter_svg: ^2.0.9
   shared_preferences: ^2.3.3
   google_mobile_ads: ^2.3.0
+  flutter_launcher_icons: ^0.14.2
 
 dev_dependencies:
   flutter_test:
@@ -98,3 +99,9 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_icons:
+  # android: true
+  ios: true
+  image_path: "assets/icon/icon.png"
+  remove_alpha_ios: true

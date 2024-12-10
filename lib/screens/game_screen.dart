@@ -324,8 +324,8 @@ class _GameScreenState extends State<GameScreen>
     });
 
     int random = Random().nextInt(100);
-    // 35%の確率でインタースティシャル広告を表示
-    if (random < 35) {
+    // 50%の確率でインタースティシャル広告を表示
+    if (random < 50) {
       if (_interstitialAd != null) {
         _interstitialAd?.show();
         // show()後はonAdDismissedFullScreenContentでdisposeされるため_ad = null扱い不要
@@ -564,6 +564,9 @@ class _GameScreenState extends State<GameScreen>
                         const SizedBox(height: 120),
                         TextButton(
                           onPressed: _resumeGame,
+                          style: TextButton.styleFrom(
+                              splashFactory: NoSplash.splashFactory,
+                              overlayColor: Colors.transparent),
                           child: Text(
                             'Resume',
                             style: GoogleFonts.rockSalt(
@@ -578,6 +581,9 @@ class _GameScreenState extends State<GameScreen>
                         const SizedBox(height: 24),
                         TextButton(
                           onPressed: _quitGame,
+                          style: TextButton.styleFrom(
+                              splashFactory: NoSplash.splashFactory,
+                              overlayColor: Colors.transparent),
                           child: Text(
                             'Home',
                             style: GoogleFonts.rockSalt(
@@ -619,6 +625,9 @@ class _GameScreenState extends State<GameScreen>
                             children: [
                               TextButton(
                                 onPressed: _retryGame,
+                                style: TextButton.styleFrom(
+                                    splashFactory: NoSplash.splashFactory,
+                                    overlayColor: Colors.transparent),
                                 child: Text(
                                   'Retry?',
                                   style: GoogleFonts.rockSalt(
@@ -635,6 +644,9 @@ class _GameScreenState extends State<GameScreen>
                                 onPressed: () {
                                   Navigator.pop(context, true);
                                 },
+                                style: TextButton.styleFrom(
+                                    splashFactory: NoSplash.splashFactory,
+                                    overlayColor: Colors.transparent),
                                 child: Text(
                                   'Stage Selection',
                                   style: GoogleFonts.rockSalt(
@@ -652,6 +664,9 @@ class _GameScreenState extends State<GameScreen>
                         if (_isResultSuccess)
                           TextButton(
                             onPressed: _handleResultOk,
+                            style: TextButton.styleFrom(
+                                splashFactory: NoSplash.splashFactory,
+                                overlayColor: Colors.transparent),
                             child: Text(
                               'Go To Next Stage',
                               style: GoogleFonts.rockSalt(

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:memorie/constants/colors.dart';
+import 'package:memorie/screens/how_to_play_screen.dart';
 import 'package:memorie/screens/main_stage_selection_screen.dart';
 import 'package:memorie/services/audio_manager.dart';
 
@@ -77,13 +78,27 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       TextButton(
                         onPressed: () {
                           // ステージ選択画面に遷移
+                          // 画面がじんわり暗くなるように遷移
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    const StageSelectionScreen()),
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation1, animation2) =>
+                                  const StageSelectionScreen(),
+                              transitionsBuilder:
+                                  (context, animation1, animation2, child) {
+                                return FadeTransition(
+                                  opacity: animation1,
+                                  child: child,
+                                );
+                              },
+                              transitionDuration:
+                                  const Duration(milliseconds: 500),
+                            ),
                           );
                         },
+                        style: TextButton.styleFrom(
+                            splashFactory: NoSplash.splashFactory,
+                            overlayColor: Colors.transparent),
                         child: Text(
                           'Start',
                           style: GoogleFonts.rockSalt(
@@ -97,10 +112,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       const SizedBox(height: 16),
                       TextButton(
                         onPressed: () {
-                          // 遊び方画面に遷移
-                          print('遊び方');
-                          // ここに遊び方画面へのナビゲーションを追加することができます
+                          // HowToPlay画面に遷移
+                          // 画面がじんわり暗くなるように遷移
+                          Navigator.push(
+                            context,
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation1, animation2) =>
+                                  const HowToPlayScreen(),
+                              transitionsBuilder:
+                                  (context, animation1, animation2, child) {
+                                return FadeTransition(
+                                  opacity: animation1,
+                                  child: child,
+                                );
+                              },
+                              transitionDuration:
+                                  const Duration(milliseconds: 500),
+                            ),
+                          );
                         },
+                        style: TextButton.styleFrom(
+                            splashFactory: NoSplash.splashFactory,
+                            overlayColor: Colors.transparent),
                         child: Text(
                           'How to play',
                           style: GoogleFonts.rockSalt(
@@ -117,6 +150,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       //   onPressed: () {
                       //     // 設定画面に遷移
                       //   },
+                      // style: TextButton.styleFrom(
+                      //  splashFactory: NoSplash.splashFactory,
+                      //  overlayColor: Colors.transparent),
                       //   child: Text(
                       //     'Setting',
                       //     style: GoogleFonts.rockSalt(

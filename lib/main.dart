@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:memorie/screens/home_screen.dart';
@@ -17,9 +18,18 @@ void main() async {
   MobileAds.instance.initialize();
 
   // デバッグ用
+  // ステージ1-1から1-4までをアンロック
   // unlockStageOneToFourStages();
+  // 全てのステージをアンロック
+  // unlockAllStages();
 
-  runApp(const MemorieApp());
+  // 画面を縦方向に固定
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]).then((_) {
+    runApp(const MemorieApp());
+  });
 }
 
 class MemorieApp extends StatelessWidget {

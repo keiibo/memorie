@@ -105,3 +105,13 @@ void unlockStageOneToFourStages() {
   }
   saveUnlockedStates();
 }
+
+// 全てのステージをアンロックする
+void unlockAllStages() {
+  for (final mainStage in stages) {
+    for (final gameStage in mainStage.gameStages) {
+      gameStage.isUnlocked = true;
+    }
+  }
+  saveUnlockedStates();
+}
